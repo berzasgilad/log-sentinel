@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Log Sentinel</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background: #111; color: #eee; }
+    h1 { color: #4ade80; }
+    .incident { background: #7f1d1d; padding: 0.5rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.4rem; border-bottom: 1px solid #333; }
+    .ERROR { color: #f87171; }
+    .WARNING { color: #fbbf24; }
+    .INFO { color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>Log Sentinel</h1>
+
+  <h2>Incidents</h2>
+  <div id="incidents"></div>
+
+  <h2>Recent Logs</h2>
+  <table>
+    <thead><tr><th>Time</th><th>Severity</th><th>Service</th><th>Message</th></tr></thead>
+    <tbody id="logs"></tbody>
+  </table>
+  <script>
+  async function refresh() {
+    const incidentsRes = await fetch("/incidents");
+    const incidents = await incidentsRes.json();
+    const incidentsDiv = document.getElementById("incidents");
+    incidentsDiv.innerHTML = incidents.length
+      ? incidents.map(i => `<div class="incident">${i.service}: ${i.error_count} errors (${i.detected_at})</div>`).join("")
+      : "<p>No incidents 🎉</p>";
+
+    const logsRes = await fetch("/logs?limit=20");
+    const logs = await logsRes.json();
+    document.getElementById("logs").innerHTML = logs.map(l =>
+      `<tr><td>${l.timestamp}</td><td class="${l.severity}">${l.severity}</td><td>${l.service}</td><td>${l.message}</td></tr>`
+    ).join("");
+  }
+
+  refresh();
+  setInterval(refresh, 5000);
+</script>
+</body>
+</html>
