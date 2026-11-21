@@ -1,6 +1,6 @@
 import sqlite3
-from parser import parse_file
-from incident_rules import find_incidents
+from app.parser import parse_file
+from app.incident_rules import find_incidents
 
 DB_PATH = "sentinel.db"
 
@@ -48,6 +48,25 @@ def save_incident(incident: dict) -> None:
     )
     conn.commit()
     conn.close()
+
+def get_logs(limit: int = 100) -> list[dict]:
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        "SELECT timestamp, severity, service, message FROM logs ORDER BY id DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+def get_incidents() -> list[dict]:
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        "SELECT service, error_count, detected_at FROM incidents ORDER BY id DESC"
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 if __name__ == "__main__":
     init_db()
